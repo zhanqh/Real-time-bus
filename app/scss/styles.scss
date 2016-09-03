@@ -1,0 +1,157 @@
+// styles.scss
+body{
+	background-color: #efeff4;
+}
+
+h1 {
+	background-color: #09bb07;
+	color: #fff;
+	font-size: 1.4em; // 22.4px
+	padding: 5px 10px;
+}
+
+/* 搜索结果列表调整 */
+.weui_cells {
+	margin: 0;
+}
+.weui_cell_ft {
+	font-size: 12px;
+}
+
+
+/* header栏高度、背景色 */
+.header {
+	background-color: #fff;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 55px;
+	border-bottom: 1px solid #ccc;
+	z-index: 999;
+}
+/* header栏第一行高度 */
+#bus_route_line1 {
+	height: 30px;
+}
+/* header栏第二行 */
+#bus_route_line2 {
+	line-height: 14px;
+	margin-right: 64px;
+	overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;	// 文字超出宽度自动隐藏
+}
+/* 路线名称样式 */
+#bus_route_name {
+	font-size: 20px;
+	margin: 0 10px;
+}
+/* 路线信息字体颜色 */
+#bus_route_time, #bus_route_time, #bus_route_fromto {
+	font-size: 14px;
+	color: gray;
+}
+/* 线路起始点边距、字体 */
+#bus_route_fromto {
+	margin-left: 10px;
+	height: 14px;
+}
+/* 返程按钮位置 */
+#bus_weui_btn {
+	float: right;
+	margin-top: -26px;
+	margin-right: 15px;
+}
+
+
+/* 主栏设置 */
+.main {
+	margin: 55px 0 40px;
+}
+.bus_station {
+	position: relative;
+	text-align: center;
+}
+/* 公交标识行 */
+.bus_mark {
+	background-color: #f9f9f9;
+	height: 25px;
+	text-align: center;
+}
+/* 公交图标大小 */
+.bus_icon {
+	height: 25px;
+	width: 25px;
+}
+/* 到站bus标识  使用伪元素解决
+.bus_icon_in {
+	height: 25px;
+	width: 25px;
+	vertical-align: middle;
+} */
+/* .transparent_bus {
+	vertical-align: middle;
+	height: 25px;
+	width: 25px;
+} */
+
+/* 定位标识  使用伪元素实现
+.icon_nav {
+	vertical-align: text-bottom;
+	height: 20px;
+	width: 20px;
+} */
+/* 设置选中站点名称颜色 */
+.bus_selected {
+	color: #eb4f38;
+}
+
+/* 底栏 */
+.footer {
+	background-color: #fff;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 40px;
+	line-height: 38px;
+	text-align: center;
+	border-top: 1px solid #ddd;
+	color: gray;
+}
+/* 公交等待时间/站数框 */
+#bus_wait {
+	display: flex;
+	padding-right: 64px;
+}
+/* 等待信息 */
+.bus_wait_info {
+	flex: 1;
+	border-right: 1px dashed #ccc;
+	color: #eb4f38;
+}
+/* 时间 */
+.bus_wait_time {
+	font-size: 20px;
+	padding: 0 7px;
+}
+/* 站数 */
+.bus_wait_stations {
+	font-size: 14px;
+	padding: 0 7px;
+	color: gray;
+}
+/* 刷新按钮 */
+#bus_reload {
+	bottom: 0;
+	right: 0;
+	position: fixed;
+	height: 40px;
+}
+/* 刷新图标 */
+#reload_icon {
+	width: 40px;
+	height: 40px;
+	padding: 0 12px;
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+		<title>zhanqh</title>
+		<link rel="stylesheet" href="//cdn.bootcss.com/weui/0.4.3/style/weui.min.css">
+		<link rel="stylesheet" href="//cdn.bootcss.com/jquery-weui/0.8.0/css/jquery-weui.min.css">
+		<link rel="stylesheet" href="./css/styles.css">
+	</head>
+	<body ontouchstart="">
+		<div>
+			<h1>实时公交查询</h1>
+		</div>
+		<div class="weui_search_bar" id="search_bar">
+			<div class="weui_search_outer">
+				<div class="weui_search_inner">
+					<i class="weui_icon_search"></i>
+					<input type="search" class="weui_search_input" id="search_input" placeholder="搜索" required/>
+					<a href="javascript:" class="weui_icon_clear" id="search_clear"></a>
+				</div>
+				<label for="search_input" class="weui_search_text" id="search_text">
+					<i class="weui_icon_search"></i>
+					<span>搜索</span>
+				</label>
+			</div>
+			<a href="javascript:" class="weui_search_cancel" id="search_cancel">取消</a>
+		</div>
+		<div class="weui_cells weui_cells_access" id="weui_cells">
+			<!-- 搜索结果数据显示 -->
+		</div>
+		<a href="./bus.html">cs</a>
+		<script src="//cdn.bootcss.com/jquery/1.11.0/jquery.min.js"></script>
+		<script src="//cdn.bootcss.com/jquery-weui/0.8.0/js/jquery-weui.min.js"></script>
+		<script src="js/main.min.js"></script>
+	</body>
+</html>
