@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=0'>
+    <title>广州实时公交查询</title>
+    <link rel="stylesheet" href="/static/css/bus.css">
+</head>
+<body ontouchstart="">
+{% raw %}
+    <div id="app">
+        <div class="header">
+            <div class="bus-route-line1">
+                <span class="bus-route-name">{{route_name}}</span>
+                <span class="bus-route-time">
+                    <img src="/static/images/first.png">
+                    <span class="start-time">{{start_time}}</span>
+                    <img src="/static/images/last.png">
+                    <span class="end-time">{{end_time}}</span>
+                </span>
+            </div>
+            <div class="bus-route-line2">
+                <span class="from">{{from}}</span>
+                 → 
+                <span class="to">{{to}}</span>
+            </div>
+            <div class="reverse" :class="{transform: reverse_transform}" @click="reverse()"><img src="/static/images/reverse.png"></div>
+            <div class="refresh" :class="{transform: refresh_transform}" @click="refresh()"><img src="/static/images/refresh.png"></div>
+        </div>
+        <div class="main">
+            <div class="bus-station" v-for="(station, index) in stations">
+                <span class="line">
+                    <div class="before" v-if="index !== 0"></div>
+                    <span class="bus bl" v-if="station.bl.length">
+                        <img src="/static/images/bus.png">
+                    </span>
+                    <span class="bus bl" v-if="station.bl.length === 1 && station.bl[0].t === '1'" @click="showDetailBL(station.bl, index)">
+                        <img src="/static/images/bus.png">
+                        <div class="show-detail" v-if="index === bl_detail_index">
+                            <span v-for="bus in bl_bus_detail">
+                                <span class="bus-detail">{{bus.no}}</span>
+                            </span>
+                        </div>
+                    </span>
+                    <span class="bus bl" v-if="station.bl.length && station.bl[0].t !== '1' || station.bl.length > 1" @click="showDetailBL(station.bl, index)">
+                        <img src="/static/images/bus-other.png">
+                        <div class="show-detail" v-if="index === bl_detail_index">
+                            <span v-for="bus in bl_bus_detail">
+                                <span class="bus-detail" v-if="bus.t === '1'">{{bus.no}}</span>
+                                <span class="bus-detail-other" v-if="bus.t === '2'">{{bus.no}} 短线</span>
+                                <span class="bus-detail-other" v-if="bus.t === '9'">{{bus.no}} 快线</span>
+                            </span>
+                        </div>
+                    </span>
+
+                    <div class="first-or-end" v-if="index === 0">
+                        <img src="/static/images/start.png">
+                        </div>
+                    <div class="first-or-end" v-else-if="index === stations.length-1">
+                        <img src="/static/images/end.png">
+                    </div>
+                    <div class="dot" v-else>{{index+1}}</div>
+
+                    <span class="bus bbl" v-if="station.bbl.length === 1 && station.bbl[0].t === '1'" @click="showDetailBBL(station.bbl, index)">
+                        <img src="/static/images/bus.png">
+                        <div class="show-detail" v-if="index === bbl_detail_index">
+                            <span v-for="bus in bbl_bus_detail">
+                                <span class="bus-detail">{{bus.no}}</span>
+                            </span>
+                        </div>
+                    </span>
+                    <span class="bus bbl" v-if="station.bbl.length && station.bbl[0].t !== '1' || station.bbl.length > 1" @click="showDetailBBL(station.bbl, index)">
+                        <img src="/static/images/bus-other.png">
+                        <div class="show-detail" v-if="index === bbl_detail_index">
+                            <span v-for="bus in bbl_bus_detail">
+                                <span class="bus-detail" v-if="bus.t === '1'">{{bus.no}}</span>
+                                <span class="bus-detail-other" v-if="bus.t === '2'">{{bus.no}} 短线</span>
+                                <span class="bus-detail-other" v-if="bus.t === '9'">{{bus.no}} 快线</span>
+                            </span>
+                        </div>
+                    </span>
+                    <div class="after" v-if="index !== stations.length-1"></div>
+                </span>
+                <span class="name" @click="waitTime(station.id, index)">
+                    {{station.name}}
+                    <span class="time"><img src="/static/images/info.png"></span>
+                    <span class="wait-time" v-if="index === wait_time_index">
+                    <span v-if="wait_time[0].count === -1" class="wait-time-detail">未发车</span>
+                    <span v-else-if="wait_time[0].count === 0" class="wait-time-detail">已到站</span>
+                    <span v-else class="wait-time-detail">{{wait_time[0].count}}站{{wait_time[0].time}}分</span>
+                        <!-- <span class="wait-time-detail" v-for="info in wait_time">
+                            <span v-if='info.count === -1'>未发车</span>
+                            <span v-else>{{info.count}}站{{info.time}}分</span>
+                        </span> -->
+                    </span>
+                </span>
+            </div>
+        </div>
+    </div>
+{% endraw %}
+</body>
+<!-- <script src="/vue/static/js/vue.js"></script>
+<script src="/vue/static/js/axios.min.js"></script> -->
+<script src="//cdn.bootcss.com/vue/2.3.4/vue.min.js"></script>
+<script src="//cdn.bootcss.com/axios/0.16.2/axios.min.js"></script>
+<script type="text/javascript">
+    var app = new Vue({
+        el: '#app',
+        data: {
+            route_name: '--路',
+            start_time: '--:--',
+            end_time: '--:--',
+            from: '-- -- 站',
+            to: '-- -- 站',
+            stations: [],
+            bbl_detail_index: '',
+            bbl_bus_detail: [],
+            bl_detail_index: '',
+            bl_bus_detail: [],
+            wait_time_index: '',
+            wait_time: [],
+            routeId: '',
+            direction: '0',
+            refresh_transform: false,
+            reverse_transform: false
+        },
+        mounted: function () {
+            vm = this
+            vm.routeId = window.location.pathname.split('/')[2]
+            this.$nextTick(function () {
+                // 代码保证 this.$el 在 document 中
+                axios.post('/api/routeStation/getByRouteIdAndDirection', {
+                        routeId: vm.routeId,
+                        direction: vm.direction
+                    })
+                    .then(function (response) {
+                        // console.log(JSON.parse(response.data))
+                        var result = JSON.parse(response.data)
+                        var buses = []
+                        for(var i = 0; i < result.retData.l.length; i++) {
+                            var bus = {}
+                            bus.name = result.retData.l[i].n
+                            bus.id = result.retData.l[i].i
+                            bus.bl = []
+                            bus.bbl = []
+                            buses.push(bus)
+                        }
+                        vm.route_name = result.retData.rn
+                        vm.from = result.retData.l[0].n
+                        vm.to = result.retData.l.slice(-1)[0].n
+                        vm.start_time = result.retData.ft.slice(0,2) + ':' + result.retData.ft.slice(-2)
+                        vm.end_time = result.retData.lt.slice(0,2) + ':' + result.retData.lt.slice(-2)
+                        vm.stations = buses
+
+                        axios.post('/api/runbus/getByRouteAndDirection', {
+                                routeId: vm.routeId,
+                                direction: vm.direction
+                            })
+                            .then(function (response) {
+                                // console.log(JSON.parse(response.data))
+                                var result = JSON.parse(response.data)
+                                var length = vm.stations.length
+                                for (var i =0; i < length; i++) {
+                                    if (result.retData[i].bbl.length) {
+                                        var bbl_arr = []
+                                        for (var j = 0; j < result.retData[i].bbl.length; j++) {
+                                            var bbl_obj = {}
+                                            bbl_obj.t = result.retData[i].bbl[j].t
+                                            bbl_obj.no = result.retData[i].bbl[j].no
+                                            bbl_arr.push(bbl_obj)
+                                        }
+                                        vm.stations[i].bbl = bbl_arr 
+                                    }
+                                }
+
+                                for (var i =0; i < length; i++) {
+                                    if (result.retData[i].bl.length) {
+                                        var bl_arr = []
+                                        for (var j = 0; j < result.retData[i].bl.length; j++) {
+                                            var bl_obj = {}
+                                            bl_obj.t = result.retData[i].bl[j].t
+                                            bl_obj.no = result.retData[i].bl[j].no
+                                            bl_arr.push(bl_obj)
+                                        }
+                                        vm.stations[i].bl = bl_arr 
+                                    }
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log(error)
+                            })
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                    })
+            })
+        },
+        methods: {
+            showDetailBBL: function (argument, index) {
+                if (index === this.bbl_detail_index) {
+                    this.bbl_detail_index = ''
+                } else {
+                    this.bl_detail_index = ''
+                    this.bbl_bus_detail = argument
+                    this.bbl_detail_index = index
+                }
+            },
+            showDetailBL: function (argument, index) {
+                if (index === this.bl_detail_index) {
+                    this.bl_detail_index = ''
+                } else {
+                    this.bbl_detail_index = ''
+                    this.bl_bus_detail = argument
+                    this.bl_detail_index = index
+                }
+            },
+            waitTime: function (argument, index) {
+                // console.log(argument.id)
+                vm = this
+                if (index === vm.wait_time_index) {
+                    vm.wait_time_index = ''
+                } else {
+                    vm.wait_time_index = index
+                    vm.wait_time = [{count:'-',time:'-'},{count:'-',time:'-'},{count:'-',time:'-'}]
+                    axios.post('/api/waitTime', {
+                            routeStationId: argument,
+                        })
+                        .then(function (response) {
+                            result = JSON.parse(response.data)
+                            vm.wait_time = result.retData.list
+                        })
+                        .catch(function (error) {
+                            console.log(error)
+                        })
+                }
+            },
+            reverse: function () {
+                vm = this
+                if (vm.reverse_transform) {
+                    vm.reverse_transform = false
+                } else {
+                    vm.reverse_transform = true
+                }
+                if (vm.direction === '1') {
+                    vm.direction = '0'
+                } else {
+                    vm.direction = '1'
+                }
+                vm.bbl_detail_index = ''
+                vm.bbl_bus_detail = []
+                vm.bl_detail_index = ''
+                vm.bl_bus_detail = []
+                vm.wait_time_index = ''
+                vm.wait_time = [{count:'-',time:'-'},{count:'-',time:'-'},{count:'-',time:'-'}]
+                axios.post('/api/routeStation/getByRouteIdAndDirection', {
+                        routeId: vm.routeId,
+                        direction: vm.direction
+                    })
+                    .then(function (response) {
+                        // console.log(JSON.parse(response.data))
+                        var result = JSON.parse(response.data)
+                        var buses = []
+                        for(var i = 0; i < result.retData.l.length; i++) {
+                            var bus = {}
+                            bus.name = result.retData.l[i].n
+                            bus.id = result.retData.l[i].i
+                            bus.bl = []
+                            bus.bbl = []
+                            buses.push(bus)
+                        }
+                        vm.route_name = result.retData.rn
+                        vm.from = result.retData.l[0].n
+                        vm.to = result.retData.l.slice(-1)[0].n
+                        vm.start_time = result.retData.ft.slice(0,2) + ':' + result.retData.ft.slice(-2)
+                        vm.end_time = result.retData.lt.slice(0,2) + ':' + result.retData.lt.slice(-2)
+                        vm.stations = buses
+
+                        axios.post('/api/runbus/getByRouteAndDirection', {
+                                routeId: vm.routeId,
+                                direction: vm.direction
+                            })
+                            .then(function (response) {
+                                // console.log(JSON.parse(response.data))
+                                var result = JSON.parse(response.data)
+                                var length = vm.stations.length
+                                for (var i =0; i < length; i++) {
+                                    if (result.retData[i].bbl.length) {
+                                        var bbl_arr = []
+                                        for (var j = 0; j < result.retData[i].bbl.length; j++) {
+                                            var bbl_obj = {}
+                                            bbl_obj.t = result.retData[i].bbl[j].t
+                                            bbl_obj.no = result.retData[i].bbl[j].no
+                                            bbl_arr.push(bbl_obj)
+                                        }
+                                        vm.stations[i].bbl = bbl_arr 
+                                    }
+                                }
+
+                                for (var i =0; i < length; i++) {
+                                    if (result.retData[i].bl.length) {
+                                        var bl_arr = []
+                                        for (var j = 0; j < result.retData[i].bl.length; j++) {
+                                            var bl_obj = {}
+                                            bl_obj.t = result.retData[i].bl[j].t
+                                            bl_obj.no = result.retData[i].bl[j].no
+                                            bl_arr.push(bl_obj)
+                                        }
+                                        vm.stations[i].bl = bl_arr 
+                                    }
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log(error)
+                            })
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                    })
+            },
+            refresh: function () {
+                vm = this
+                if (vm.refresh_transform) {
+                    vm.refresh_transform = false
+                } else {
+                    vm.refresh_transform = true
+                }
+                vm.bbl_detail_index = ''
+                vm.bbl_bus_detail = []
+                vm.bl_detail_index = ''
+                vm.bl_bus_detail = []
+                axios.post('/api/runbus/getByRouteAndDirection', {
+                        routeId: vm.routeId,
+                        direction: vm.direction
+                    })
+                    .then(function (response) {
+                        // console.log(JSON.parse(response.data))
+                        var result = JSON.parse(response.data)
+                        var length = vm.stations.length
+                        for (var i =0; i < length; i++) {
+                            vm.stations[i].bbl = []
+                            if (result.retData[i].bbl.length) {
+                                var bbl_arr = []
+                                for (var j = 0; j < result.retData[i].bbl.length; j++) {
+                                    var bbl_obj = {}
+                                    bbl_obj.t = result.retData[i].bbl[j].t
+                                    bbl_obj.no = result.retData[i].bbl[j].no
+                                    bbl_arr.push(bbl_obj)
+                                }
+                                vm.stations[i].bbl = bbl_arr 
+                            }
+                        }
+
+                        for (var i =0; i < length; i++) {
+                            vm.stations[i].bl = []
+                            if (result.retData[i].bl.length) {
+                                var bl_arr = []
+                                for (var j = 0; j < result.retData[i].bl.length; j++) {
+                                    var bl_obj = {}
+                                    bl_obj.t = result.retData[i].bl[j].t
+                                    bl_obj.no = result.retData[i].bl[j].no
+                                    bl_arr.push(bl_obj)
+                                }
+                                vm.stations[i].bl = bl_arr 
+                            }
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                    })
+
+                if (vm.wait_time_index) {
+                    vm.wait_time = [{count:'-',time:'-'},{count:'-',time:'-'},{count:'-',time:'-'}]
+                    axios.post('/api/waitTime', {
+                            routeStationId: vm.stations[vm.wait_time_index].id,
+                        })
+                        .then(function (response) {
+                            result = JSON.parse(response.data)
+                            vm.wait_time = result.retData.list
+                        })
+                        .catch(function (error) {
+                            console.log(error)
+                        })
+                }
+            }
+        }
+    })
+</script>
+</html>
